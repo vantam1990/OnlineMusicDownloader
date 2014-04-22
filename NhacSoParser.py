@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" NhacSoParser - Parser data from http://nhacso.net
+""" ZingMp3Parser - Parser data from http://mp3.zing.vn
 
 Parser web page to get xml url
 Get xml file and parser to get data
 """
+
+from urllib import urlopen
+from HTMLParser import HTMLParser
+from xml.etree import ElementTree as ET
+import gzip
+from StringIO import StringIO
 
 __author__ = "Thuan.D.T (MrTux)"
 __copyright__ = "Copyright (c) 2011 Thuan.D.T (MrTux) "
@@ -16,16 +22,12 @@ __maintainer__ = "Thuan.D.T (MrTux)"
 __email__ = "mrtux@ubuntu-vn.org"
 __status__ = "Development"
 
-from urllib import urlopen
-from HTMLParser import HTMLParser
-from xml.etree import ElementTree as ET
-
 
 class NhacSoParser(HTMLParser):
     def __init__(self, url):
         """Returns new Sequence object with specified url
 
-        url: link to nhacso.net web page
+        url: link to *.nhac.vui.vn web page
         """
         HTMLParser.__init__(self)
         self.song_name = []
@@ -33,10 +35,16 @@ class NhacSoParser(HTMLParser):
         self.song_link = []
         self.song_type = []
         req = urlopen(url)  # open connection to web page
-        data = req.read().split("\n")  # split web page with \n
+        data = None
+        if req.info().get('Content-Encoding') == "gzip":
+            buf = StringIO( req.read())
+            f = gzip.GzipFile(fileobj=buf)
+            data = f.read().split("\n")
+        else:
+            data = req.read().split("\n")  # split web page with \n
         feed_data = None
         for param in data:
-            if (param.find('<param name="flashvars" value="xmlPath=') > -1):
+            if (param.find('<param name="flashvars" value="') > -1):
                 """Find line to get xml url
                 """
                 feed_data = param
@@ -52,22 +60,27 @@ class NhacSoParser(HTMLParser):
             flashvars = dict(attrs)['value']  # get flashvars value
             flashvars = flashvars.split('&')
             for xml_file in flashvars:
-                if(xml_file.find('xmlPath=') > -1):
-                    xml_url = xml_file.replace('xmlPath=', '')  # get xml url
+                if(xml_file.find('xmlURL=') > -1):
+                    xml_url = xml_file.replace('xmlURL=', '')  # get xml url
                     break
             xml_data = urlopen(xml_url)  # get xml data
+            if xml_data.info().get('Content-Encoding') == "gzip":
+                buf = StringIO( xml_data.read())
+                xml_data = gzip.GzipFile(fileobj=buf)
             tree = ET.parse(xml_data)
-            for name in tree.findall('.//song/name'):
+            root = tree.getroot()
+            for name in tree.findall('./item/title'):
                 self.song_name.append(name.text.strip())  # get song name
-            for artist in tree.findall('.//song/artist'):
+            for artist in tree.findall('./item/performer'):
                 self.song_artist.append(artist.text.strip())  # get song artist
-            for media_url in tree.findall('.//song/mp3link'):
+            for media_url in tree.findall('./item/source'):
                 self.song_link.append(media_url.text)  # get media url
-                if media_url.text is not None:
-                    self.song_type.append(media_url.text.split('.')[-1])  # get media type
-                else:
-                    self.song_type.append(None)
-
+            for child in root:
+                self.song_type.append(child.attrib['type'])  # get media file type
+    
+    def handle_entityref(self, ref): # No changes here either
+        self.handle_data(self.unescape("&%s" % ref))
+    
     def music_data(self):
         """Returns data of Object
 
@@ -76,4 +89,3 @@ class NhacSoParser(HTMLParser):
         song_link: list of mp3 media link
         """
         return self.song_name, self.song_artist, self.song_link, self.song_type
-
