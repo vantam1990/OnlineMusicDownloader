@@ -6,7 +6,8 @@ Tiếng Việt
 -----------
 
 Online Music Downloader là chương trình dùng để download nhạc từ một số trang
-web nghe nhạc online của Việt Nam.
+web nghe nhạc online của Việt Nam (nhacso.net, mp3.zing.vn, nhaccuatui.com, nhac.vui.vn).
+Hỗ trợ tải về tất cả bài hát của một album hay một playlist
 
 Chương trình được viết bằng python, chạy đa nền trên bất cứ máy tính nào cài đặt
 Python.
@@ -30,7 +31,7 @@ Chương trình có thể nhập danh sách các trang muốn tải về từ fi
 khi chạy trương trình.
 Ví dụ:
     $: ./OnlineMusicDownloader.py -i ~/url.txt http://nhacso.net/nghe-nhac/hotel-california.W19VU0Jf.html
-    
+    $: ./OnlineMusicDownloader.py -i ~/url.txt http://nhacso.net/nghe-album/con-sao-tinh-que.XFhQVA==.html
 Thao khảo các tham số khác bằng tham số --help    
 
 Giấy phép
@@ -51,8 +52,9 @@ English
 What is it?
 -----------
 
-Online Music Download is tools for download music from some vietnamese site
-(nhacso.net, mp3.zing.vn, nhaccuatui.com)
+Online Music Download is tools for download music from some vietnamese sites
+(nhacso.net, mp3.zing.vn, nhaccuatui.com, nhac.vui.vn)
+Supported downloading all songs of a album or a playlist
 
 Installation
 ------------
