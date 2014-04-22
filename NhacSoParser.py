@@ -60,23 +60,24 @@ class NhacSoParser(HTMLParser):
             flashvars = dict(attrs)['value']  # get flashvars value
             flashvars = flashvars.split('&')
             for xml_file in flashvars:
-                if(xml_file.find('xmlURL=') > -1):
-                    xml_url = xml_file.replace('xmlURL=', '')  # get xml url
+                if(xml_file.find('xmlPath=') > -1):
+                    xml_url = xml_file.replace('xmlPath=', '')  # get xml url
                     break
             xml_data = urlopen(xml_url)  # get xml data
             if xml_data.info().get('Content-Encoding') == "gzip":
                 buf = StringIO( xml_data.read())
                 xml_data = gzip.GzipFile(fileobj=buf)
             tree = ET.parse(xml_data)
-            root = tree.getroot()
-            for name in tree.findall('./item/title'):
+            for name in tree.findall('.//playlist/song/name'):
                 self.song_name.append(name.text.strip())  # get song name
-            for artist in tree.findall('./item/performer'):
+            for artist in tree.findall('.//playlist/song/artist'):
                 self.song_artist.append(artist.text.strip())  # get song artist
-            for media_url in tree.findall('./item/source'):
+            for media_url in tree.findall('.//playlist/song/mp3link'):
                 self.song_link.append(media_url.text)  # get media url
-            for child in root:
-                self.song_type.append(child.attrib['type'])  # get media file type
+                if media_url.text is not None:
+                    self.song_type.append(media_url.text.split('.')[-1])  # get media type
+                else:
+                    self.song_type.append(None)
     
     def handle_entityref(self, ref): # No changes here either
         self.handle_data(self.unescape("&%s" % ref))
